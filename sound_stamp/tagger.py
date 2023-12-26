@@ -54,7 +54,7 @@ class MusicTagger:
         self.model.eval()
         with torch.no_grad():
             features = features.to(self.device)
-            output = self.model(features).squeeze(0)
+            output = self.model(features)
         
         return output
     

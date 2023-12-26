@@ -1,6 +1,8 @@
 import argparse
 
 import numpy as np
+
+import torch
 import librosa
 
 from sound_stamp.tagger import MusicTagger
@@ -27,8 +29,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tag an audio file using a trained model.")
     parser.add_argument("--input", "-i", type=str,
                         help="File path to the audio file.")
-    parser.add_argument("--threshold", "-t", type=float, default=0.5,
-                        help="Probability threshold for tag prediction. Defaults to 0.5.")
+    parser.add_argument("--threshold", "-t", type=float, default=0.25,
+                        help="Probability threshold for tag prediction. Defaults to 0.25.")
     parser.add_argument("--file_name", "-f", type=str, default="music_tagger.pt",
                         help="File name of the trained model. Defaults to 'music_tagger.pt'.")
     args = parser.parse_args()
@@ -41,12 +43,21 @@ if __name__ == "__main__":
     tagger.load(f"models/{file_name}")
 
     # Load audio file and extract features
-    # TODO: Split longer audio into parts and tag all off them
-    waveform, _ = librosa.load(audio_file, sr=SAMPLE_RATE, duration=AUDIO_LEN)
+    waveform, _ = librosa.load(audio_file, sr=SAMPLE_RATE)
     features = to_log_mel_spectrogram(waveform, SAMPLE_RATE, FFT_FRAME_SIZE, HOP_SIZE, NUM_MEL_BANDS)
-    features = features.unsqueeze(0)
+    
+    # Split longer audio files into multiple parts
+    if features.shape[1] == 1366:
+        features = features.unsqueeze(0)
+    else: 
+        chunks = torch.split(features, 1366, dim=1)        
+        if len(chunks[-1][0]) < 1366:
+            # If the last chunk is to small, drop it
+            chunks = chunks[:-1]        
+        features = torch.stack(chunks, dim=0)
     
     # Select tags based on the probability threshold
     class_names = np.array(class_names)
-    predicted_tags = tagger.inference(features).cpu().numpy()
-    print(f"Tags: {class_names[predicted_tags > prob_threshold]}")
+    probs = tagger.inference(features).cpu().numpy()
+    tags = [tag for p in probs for tag in class_names[p > prob_threshold].tolist()]
+    print(f"Tags: {list(set(tags))}")
