@@ -18,8 +18,8 @@ class MusicTagger:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"        
         self.model.to(self.device)
     
-    def train(self, loader: DataLoader) -> float:
-        optimizer = optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
+    def train(self, loader: DataLoader, learning_rate: float) -> float:
+        optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         total_loss = 0.0
         
         self.model.train()
@@ -58,10 +58,12 @@ class MusicTagger:
         
         return output
     
-    def save(self, file_name: str) -> None:
+    def save(self, file_name: str, verbose: bool = True) -> None:
         torch.save(self.model.state_dict(), file_name)
-        print(f"Model parameters saved to '{file_name}'.")
+        if verbose:
+            print(f"Model parameters saved to '{file_name}'.")
         
-    def load(self, file_name: str) -> None:
+    def load(self, file_name: str, verbose: bool = True) -> None:
         self.model.load_state_dict(torch.load(file_name, map_location=self.device))
-        print(f"Model parameters loaded from '{file_name}'.")
+        if verbose:
+            print(f"Model parameters loaded from '{file_name}'.")
