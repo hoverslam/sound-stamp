@@ -62,12 +62,12 @@ python -m scripts.evaluate -f "music_tagger"
 **Tag an audio track:**
 
 ```Python
-python -m scripts.tag -i "<path to audio file>" -f "music_tagger" -t 0.25
+python -m scripts.tag -i "<path to audio file>" -f "music_tagger" -t 0.5
 ```
 ```
 -i, --input         File path to the audio file.
 -m, --model         File name of the trained model. Defaults to 'music_tagger.pt'.
--t, --threshold     Probability threshold for tag prediction. Defaults to 0.25.
+-t, --threshold     Probability threshold for tag prediction. Defaults to 0.5.
 ```
 
 ## License
