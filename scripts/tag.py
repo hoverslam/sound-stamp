@@ -27,20 +27,20 @@ class_names = ['guitar', 'classical', 'slow', 'techno', 'strings', 'drums', 'ele
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tag an audio file using a trained model.")
-    parser.add_argument("--input", "-i", type=str,
+    parser.add_argument("-i", "--input", type=str, metavar="",
                         help="File path to the audio file.")
-    parser.add_argument("--threshold", "-t", type=float, default=0.25,
-                        help="Probability threshold for tag prediction. Defaults to 0.25.")
-    parser.add_argument("--file_name", "-f", type=str, default="music_tagger.pt",
-                        help="File name of the trained model. Defaults to 'music_tagger.pt'.")
+    parser.add_argument("-m", "--model", type=str, default="music_tagger", metavar="",
+                        help="File name of the trained model. Defaults to 'music_tagger'.")
+    parser.add_argument("-t", "--threshold", type=float, default=0.25, metavar="",
+                    help="Probability threshold for tag prediction. Defaults to 0.25.")
     args = parser.parse_args()
     audio_file = args.input
     prob_threshold = args.threshold
-    file_name = args.file_name
+    model = args.model
       
     # Initialize model and load state dict
     tagger = MusicTagger(class_names)
-    tagger.load(f"models/{file_name}")
+    tagger.load(f"models/{model}.pt")
 
     # Load audio file and extract features
     waveform, _ = librosa.load(audio_file, sr=SAMPLE_RATE)

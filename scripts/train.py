@@ -17,10 +17,10 @@ LEARNING_RATE = 3e-4
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training loop for music tagger.")
-    parser.add_argument("--file_name", "-f", type=str, default="music_tagger.pt",
-                        help="Name of the file to save the model. Defaults to 'music_tagger.pt'.")
+    parser.add_argument("-m", "--model", type=str, default="music_tagger", metavar="",
+                        help="Name of the file to save the model. Defaults to 'music_tagger'.")
     args = parser.parse_args()
-    file_name = args.file_name
+    model = args.model
     
     # Load data set
     dataset = MagnaSet()
@@ -65,4 +65,4 @@ if __name__ == "__main__":
 
     # Save the best model with a new name
     tagger.load("models/checkpoint.pt", verbose=False)
-    tagger.save(f"models/{file_name}")
+    tagger.save(f"models/{model}.pt")

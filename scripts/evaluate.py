@@ -14,10 +14,10 @@ BATCH_SIZE = 128
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Score a music tagger on the test set.")
-    parser.add_argument("--file_name", "-f", type=str, default="music_tagger.pt",
-                        help="File name of the trained model. Defaults to 'music_tagger.pt'.")
+    parser.add_argument("-m", "--model", type=str, default="music_tagger", metavar="",
+                        help="File name of the trained model. Defaults to 'music_tagger'.")
     args = parser.parse_args()
-    file_name = args.file_name
+    model = args.model
     
     # Load data set
     dataset = MagnaSet()
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # Initialize model and load state dict
     tagger = MusicTagger(dataset.class_names)
-    tagger.load(f"models/{file_name}")
+    tagger.load(f"models/{model}.pt")
 
     # Make predictions on test set
     print("Testing ...")
