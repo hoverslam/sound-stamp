@@ -6,9 +6,6 @@ from torch.nn.functional import binary_cross_entropy
 from sound_stamp.networks import MusicTaggerFCN
 
 
-LEARNING_RATE = 3e-4
-
-
 class MusicTagger:
     
     def __init__(self, class_names: list[str]) -> None:

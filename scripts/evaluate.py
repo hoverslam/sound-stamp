@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
@@ -6,11 +7,13 @@ from torchmetrics.classification import MultilabelAUROC
 
 from sound_stamp.datasets import MagnaSet
 from sound_stamp.tagger import MusicTagger
+from sound_stamp.utils import load_yaml
 
 
-# Settings
-SEED = 42
-BATCH_SIZE = 128
+# Load model configs
+model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
+batch_size = model_configs["MusicTaggerFCN"]["hyperparameters"]["batch_size"]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Score a music tagger on the test set.")
@@ -21,8 +24,8 @@ if __name__ == "__main__":
     
     # Load data set
     dataset = MagnaSet()
-    _, _, test = dataset.random_split(random_state=SEED)
-    test_loader = DataLoader(test, batch_size=128)
+    _, _, test = dataset.random_split(random_state=42)
+    test_loader = DataLoader(test, batch_size=batch_size)
 
     # Initialize model and load state dict
     tagger = MusicTagger(dataset.class_names)

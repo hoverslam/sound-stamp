@@ -1,4 +1,6 @@
+import yaml
 import numpy as np
+from pathlib import Path
 
 import torch 
 import torchaudio
@@ -17,3 +19,9 @@ def to_log_mel_spectrogram(waveform: np.ndarray, sample_rate: int,
     log_mel_spec = torchaudio.transforms.AmplitudeToDB()(mel_spec)
     
     return log_mel_spec
+
+def load_yaml(file_path: Path) -> dict:
+    with open(file_path, "r") as file:
+        output = yaml.safe_load(file)
+        
+    return output

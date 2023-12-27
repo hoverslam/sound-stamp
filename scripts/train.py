@@ -1,19 +1,22 @@
 import argparse
+from pathlib import Path
 
 from torch.utils.data import DataLoader
 
 from sound_stamp.datasets import MagnaSet
 from sound_stamp.tagger import MusicTagger
+from sound_stamp.utils import load_yaml
 
 
-# Settings
-SEED = 42
-BATCH_SIZE = 128
-NUM_EPOCHS = 10
-PATIENCE = 3
-REFINEMENT = 2
-REFINEMENT_LR_FACTOR = 0.1
-LEARNING_RATE = 3e-4
+# Load model configs
+model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
+num_epochs = model_configs["MusicTaggerFCN"]["hyperparameters"]["num_epochs"]
+batch_size = model_configs["MusicTaggerFCN"]["hyperparameters"]["batch_size"]
+learning_rate = model_configs["MusicTaggerFCN"]["hyperparameters"]["learning_rate"]
+patience = model_configs["MusicTaggerFCN"]["hyperparameters"]["patience"]
+refinement = model_configs["MusicTaggerFCN"]["hyperparameters"]["refinement"]
+refinement_lr_factor = model_configs["MusicTaggerFCN"]["hyperparameters"]["refinement_lr_factor"]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training loop for music tagger.")
@@ -24,9 +27,9 @@ if __name__ == "__main__":
     
     # Load data set
     dataset = MagnaSet()
-    train, val, _ = dataset.random_split(random_state=SEED)
-    train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
+    train, val, _ = dataset.random_split(random_state=42)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=True)
 
     # Initialize model
     tagger = MusicTagger(dataset.class_names)
@@ -35,26 +38,26 @@ if __name__ == "__main__":
     print("Training ...")
 
     best_val_loss = float("inf")
-    cur_patience = PATIENCE
-    cur_refinement = REFINEMENT
-    cur_learning_rate = LEARNING_RATE
+    cur_patience = patience
+    cur_refinement = refinement
+    cur_learning_rate = learning_rate
 
-    for epoch in range(NUM_EPOCHS):
+    for epoch in range(num_epochs):
         train_loss = tagger.train(train_loader, cur_learning_rate)
         val_loss = tagger.evaluate(val_loader)
-        print(f"{epoch+1}/{NUM_EPOCHS}: {train_loss=:.4f}, {val_loss=:.4f}")
+        print(f"{epoch+1}/{num_epochs}: {train_loss=:.4f}, {val_loss=:.4f}")
         
         # Early stopping with refinement
         if val_loss < best_val_loss:
             tagger.save("models/checkpoint.pt", verbose=False)
             best_val_loss = val_loss
-            cur_patience = PATIENCE        
+            cur_patience = patience        
         else:
             if cur_patience == 0:
                 if cur_refinement > 0:
                     tagger.load("models/checkpoint.pt", verbose=False)
-                    cur_learning_rate = cur_learning_rate * REFINEMENT_LR_FACTOR                
-                    cur_patience = PATIENCE
+                    cur_learning_rate = cur_learning_rate * refinement_lr_factor                
+                    cur_patience = patience
                     cur_refinement -= 1
                     print(f"Refinement with new learning rate {cur_learning_rate}.")
                 else:

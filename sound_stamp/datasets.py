@@ -10,13 +10,15 @@ import librosa
 import torch
 from torch.utils.data import Dataset, Subset
 
-from sound_stamp.utils import to_log_mel_spectrogram
+from sound_stamp.utils import to_log_mel_spectrogram, load_yaml
 
 
-SAMPLE_RATE = 12000
-FFT_FRAME_SIZE = 512
-NUM_MEL_BANDS = 96
-HOP_SIZE = 256
+# Load model configs
+model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
+sample_rate = model_configs["MusicTaggerFCN"]["audio"]["sample_rate"]
+fft_frame_size = model_configs["MusicTaggerFCN"]["audio"]["fft_frame_size"]
+hop_size = model_configs["MusicTaggerFCN"]["audio"]["hop_size"]
+num_mel_bands = model_configs["MusicTaggerFCN"]["audio"]["num_mel_bands"]
         
 
 class MagnaSet(Dataset):
@@ -37,8 +39,8 @@ class MagnaSet(Dataset):
             warnings.simplefilter("ignore")
             try:
                 audio_path = self.path.joinpath("audio", self.audio_files[idx])
-                waveform, _ = librosa.load(audio_path, sr=SAMPLE_RATE)
-                features = to_log_mel_spectrogram(waveform, SAMPLE_RATE, FFT_FRAME_SIZE, HOP_SIZE, NUM_MEL_BANDS)
+                waveform, _ = librosa.load(audio_path, sr=sample_rate)
+                features = to_log_mel_spectrogram(waveform, sample_rate, fft_frame_size, hop_size, num_mel_bands)
                 targets = self.targets[idx].type(torch.float32)
             except:
                 features = torch.zeros((96, 1366), dtype=torch.float32)

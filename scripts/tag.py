@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 
@@ -6,24 +7,20 @@ import torch
 import librosa
 
 from sound_stamp.tagger import MusicTagger
-from sound_stamp.utils import to_log_mel_spectrogram
+from sound_stamp.utils import to_log_mel_spectrogram, load_yaml
 
 
-# SETTINGS
-SAMPLE_RATE = 12000
-FFT_FRAME_SIZE = 512
-NUM_MEL_BANDS = 96
-HOP_SIZE = 256
-AUDIO_LEN = 29.124   # seconds
+# Load model configs
+model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
+sample_rate = model_configs["MusicTaggerFCN"]["audio"]["sample_rate"]
+fft_frame_size = model_configs["MusicTaggerFCN"]["audio"]["fft_frame_size"]
+hop_size = model_configs["MusicTaggerFCN"]["audio"]["hop_size"]
+num_mel_bands = model_configs["MusicTaggerFCN"]["audio"]["num_mel_bands"]
 
-# TODO: Put the class names somewhere else
-class_names = ['guitar', 'classical', 'slow', 'techno', 'strings', 'drums', 'electronic',
-               'rock', 'fast', 'piano', 'ambient', 'beat', 'violin', 'vocal', 'synth', 'female',
-               'indian', 'opera', 'male', 'singing', 'vocals', 'no vocals', 'harpsichord',
-               'loud', 'quiet', 'flute', 'woman', 'male vocal', 'no vocal', 'pop', 'soft',
-               'sitar', 'solo', 'man', 'classic', 'choir', 'voice', 'new age', 'dance',
-               'female vocal', 'male voice', 'beats', 'harp', 'cello', 'no voice', 'weird',
-               'country', 'female voice', 'metal', 'choral']
+# Load dataset configs
+dataset_configs = load_yaml(Path.cwd().joinpath("configs", "datasets.yaml"))
+class_names = dataset_configs["MagnaTagATune"]["class_names"]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tag an audio file using a trained model.")
@@ -43,8 +40,8 @@ if __name__ == "__main__":
     tagger.load(f"models/{model}.pt")
 
     # Load audio file and extract features
-    waveform, _ = librosa.load(audio_file, sr=SAMPLE_RATE)
-    features = to_log_mel_spectrogram(waveform, SAMPLE_RATE, FFT_FRAME_SIZE, HOP_SIZE, NUM_MEL_BANDS)
+    waveform, _ = librosa.load(audio_file, sr=sample_rate)
+    features = to_log_mel_spectrogram(waveform, sample_rate, fft_frame_size, hop_size, num_mel_bands)
     
     # Split longer audio files into multiple parts
     if features.shape[1] == 1366:
