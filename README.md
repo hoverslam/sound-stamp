@@ -50,7 +50,7 @@ python -m scripts.train -f "music_tagger"
 -m , --model        Name of the file to save the model. Defaults to 'music_tagger'.
 ```
 
-**Evaluate the performance on [Area under the ROC Curve](https://machine-learning.paperspace.com/wiki/auc-area-under-the-roc-curve):**
+**Evaluate the performance on Area under the ROC Curve:**
 
 ```Python
 python -m scripts.evaluate -f "music_tagger"
@@ -77,4 +77,4 @@ The code in this project is licensed under the [MIT License](LICENSE.txt).
 
 ## Acknowledgements
 
-The project is based on the course [Intelligent Audio and Music Analysis](https://tiss.tuwien.ac.at/course/educationDetails.xhtml?dswid=6631&dsrid=434&semester=2023W&courseNr=194039) held at the TU Wien.
+The project is based on the course [Intelligent Audio and Music Analysis](https://tiss.tuwien.ac.at/course/educationDetails.xhtml?dswid=3058&dsrid=963&courseNr=194039&semester=2023W&locale=en) held at the TU Wien.
