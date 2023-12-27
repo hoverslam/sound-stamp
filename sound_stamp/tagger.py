@@ -2,16 +2,16 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 from torch.nn.functional import binary_cross_entropy
+from tqdm import tqdm
 
 from sound_stamp.networks import MusicTaggerFCN
 
 
 class MusicTagger:
     
-    def __init__(self, class_names: list[str]) -> None:
-        self.model = MusicTaggerFCN(num_classes=len(class_names))
-        self.class_names = class_names
-                
+    def __init__(self, configs: dict) -> None:
+        self.class_names = configs["datasets"]["MagnaTagATune"]["class_names"]
+        self.model = MusicTaggerFCN(num_classes=len(self.class_names))
         self.device = "cuda" if torch.cuda.is_available() else "cpu"        
         self.model.to(self.device)
     
@@ -20,7 +20,7 @@ class MusicTagger:
         total_loss = 0.0
         
         self.model.train()
-        for features, targets in loader:
+        for features, targets in tqdm(loader, desc="Training  "):
             features = features.to(self.device)
             targets = targets.to(self.device)
             
@@ -29,7 +29,7 @@ class MusicTagger:
             loss = binary_cross_entropy(output, targets)
             total_loss += loss.item()
             loss.backward()
-            optimizer.step()          
+            optimizer.step()    
             
         return total_loss / len(loader)
     
@@ -38,7 +38,7 @@ class MusicTagger:
         
         self.model.eval()
         with torch.no_grad():
-            for features, targets in loader:
+            for features, targets in tqdm(loader, desc="Validation"):
                 features = features.to(self.device)
                 targets = targets.to(self.device)
                 

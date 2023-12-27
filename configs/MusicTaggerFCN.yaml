@@ -1,0 +1,70 @@
+hyperparameters:
+  # Parameters for training
+  num_epochs: 20
+  batch_size: 128
+  learning_rate: 0.0003    
+  patience: 3
+  refinement: 2
+  refinement_lr_factor: 0.5
+    
+audio:
+  # The model architecture is designed for these settings              
+  sample_rate: 12000
+  fft_frame_size: 512
+  hop_size: 256
+  num_mel_bands: 96
+
+datasets: 
+  MagnaTagATune:
+    class_names:
+      # Top-50 tags (edited, e.g. similar tags are reduced to the first one) 
+      - guitar
+      - classical
+      - slow
+      - techno
+      - strings
+      - drums
+      - electronic
+      - rock
+      - fast
+      - piano
+      - ambient
+      - beat
+      - violin
+      - vocal
+      - synth
+      - female
+      - indian
+      - opera
+      - male
+      - singing
+      - vocals
+      - no vocals
+      - harpsichord
+      - loud
+      - quiet
+      - flute
+      - pop
+      - soft
+      - sitar
+      - solo
+      - choir
+      - new age
+      - dance
+      - beats
+      - harp
+      - cello
+      - weird
+      - country
+      - metal
+      - choral
+      - electro
+      - drum
+      - jazz
+      - eastern
+      - instrumental
+      - bass
+      - modern
+      - string
+      - baroque
+      - foreign

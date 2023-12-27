@@ -10,23 +10,19 @@ import librosa
 import torch
 from torch.utils.data import Dataset, Subset
 
-from sound_stamp.utils import to_log_mel_spectrogram, load_yaml
-
-
-# Load model configs
-model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
-sample_rate = model_configs["MusicTaggerFCN"]["audio"]["sample_rate"]
-fft_frame_size = model_configs["MusicTaggerFCN"]["audio"]["fft_frame_size"]
-hop_size = model_configs["MusicTaggerFCN"]["audio"]["hop_size"]
-num_mel_bands = model_configs["MusicTaggerFCN"]["audio"]["num_mel_bands"]
+from sound_stamp.utils import to_log_mel_spectrogram
         
 
 class MagnaSet(Dataset):
-    def __init__(self, num_classes: int = 50) -> None:
+    def __init__(self, configs: dict) -> None:
         super().__init__()
 
         self.path = Path.cwd().joinpath("data", "magna")
-        self.num_classes = num_classes
+        self.class_names = configs["datasets"]["MagnaTagATune"]["class_names"]     
+        self.sample_rate = configs["audio"]["sample_rate"]
+        self.fft_frame_size = configs["audio"]["fft_frame_size"]
+        self.hop_size = configs["audio"]["hop_size"]
+        self.num_mel_bands = configs["audio"]["num_mel_bands"]
 
         self._download()
         self._create_targets()
@@ -39,12 +35,13 @@ class MagnaSet(Dataset):
             warnings.simplefilter("ignore")
             try:
                 audio_path = self.path.joinpath("audio", self.audio_files[idx])
-                waveform, _ = librosa.load(audio_path, sr=sample_rate)
-                features = to_log_mel_spectrogram(waveform, sample_rate, fft_frame_size, hop_size, num_mel_bands)
+                waveform, _ = librosa.load(audio_path, sr=self.sample_rate)
+                features = to_log_mel_spectrogram(waveform, self.sample_rate, self.fft_frame_size, 
+                                                  self.hop_size, self.num_mel_bands)
                 targets = self.targets[idx].type(torch.float32)
             except:
                 features = torch.zeros((96, 1366), dtype=torch.float32)
-                targets = torch.zeros(self.num_classes, dtype=torch.float32)     
+                targets = torch.zeros(len(self.class_names), dtype=torch.float32)     
         
         return features, targets
 
@@ -103,10 +100,6 @@ class MagnaSet(Dataset):
 
         # Get path to audio files
         self.audio_files = list(ann["mp3_path"].values)
-
-        # Select the n most tags as targets
-        tag_counts = ann.drop(["clip_id", "mp3_path"], axis=1).sum().sort_values(ascending=False)
-        self.class_names = tag_counts[:self.num_classes].index.to_list()
         self.targets = torch.tensor(ann[self.class_names].values, dtype=torch.int8)
 
     def random_split(self, fractions: tuple = (0.75, 0.10, 0.15), 

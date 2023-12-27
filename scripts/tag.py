@@ -10,33 +10,29 @@ from sound_stamp.tagger import MusicTagger
 from sound_stamp.utils import to_log_mel_spectrogram, load_yaml
 
 
-# Load model configs
-model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
-sample_rate = model_configs["MusicTaggerFCN"]["audio"]["sample_rate"]
-fft_frame_size = model_configs["MusicTaggerFCN"]["audio"]["fft_frame_size"]
-hop_size = model_configs["MusicTaggerFCN"]["audio"]["hop_size"]
-num_mel_bands = model_configs["MusicTaggerFCN"]["audio"]["num_mel_bands"]
-
-# Load dataset configs
-dataset_configs = load_yaml(Path.cwd().joinpath("configs", "datasets.yaml"))
-class_names = dataset_configs["MagnaTagATune"]["class_names"]
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tag an audio file using a trained model.")
     parser.add_argument("-i", "--input", type=str, metavar="",
                         help="File path to the audio file.")
     parser.add_argument("-m", "--model", type=str, default="music_tagger", metavar="",
                         help="File name of the trained model. Defaults to 'music_tagger'.")
-    parser.add_argument("-t", "--threshold", type=float, default=0.25, metavar="",
-                    help="Probability threshold for tag prediction. Defaults to 0.25.")
+    parser.add_argument("-t", "--threshold", type=float, default=0.5, metavar="",
+                    help="Probability threshold for tag prediction. Defaults to 0.5.")
     args = parser.parse_args()
     audio_file = args.input
     prob_threshold = args.threshold
     model = args.model
+    
+    # Load configs
+    configs = load_yaml(Path.cwd().joinpath("configs", "MusicTaggerFCN.yaml"))
+    sample_rate = configs["audio"]["sample_rate"]
+    fft_frame_size = configs["audio"]["fft_frame_size"]
+    hop_size = configs["audio"]["hop_size"]
+    num_mel_bands = configs["audio"]["num_mel_bands"]
+    class_names = configs["datasets"]["MagnaTagATune"]["class_names"]
       
     # Initialize model and load state dict
-    tagger = MusicTagger(class_names)
+    tagger = MusicTagger(configs)
     tagger.load(f"models/{model}.pt")
 
     # Load audio file and extract features

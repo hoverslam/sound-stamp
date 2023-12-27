@@ -8,16 +8,6 @@ from sound_stamp.tagger import MusicTagger
 from sound_stamp.utils import load_yaml
 
 
-# Load model configs
-model_configs = load_yaml(Path.cwd().joinpath("configs", "models.yaml"))
-num_epochs = model_configs["MusicTaggerFCN"]["hyperparameters"]["num_epochs"]
-batch_size = model_configs["MusicTaggerFCN"]["hyperparameters"]["batch_size"]
-learning_rate = model_configs["MusicTaggerFCN"]["hyperparameters"]["learning_rate"]
-patience = model_configs["MusicTaggerFCN"]["hyperparameters"]["patience"]
-refinement = model_configs["MusicTaggerFCN"]["hyperparameters"]["refinement"]
-refinement_lr_factor = model_configs["MusicTaggerFCN"]["hyperparameters"]["refinement_lr_factor"]
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training loop for music tagger.")
     parser.add_argument("-m", "--model", type=str, default="music_tagger", metavar="",
@@ -25,27 +15,35 @@ if __name__ == "__main__":
     args = parser.parse_args()
     model = args.model
     
+    # Load configs
+    configs = load_yaml(Path.cwd().joinpath("configs", "MusicTaggerFCN.yaml"))
+    num_epochs = configs["hyperparameters"]["num_epochs"]
+    batch_size = configs["hyperparameters"]["batch_size"]
+    learning_rate = configs["hyperparameters"]["learning_rate"]
+    patience = configs["hyperparameters"]["patience"]
+    refinement = configs["hyperparameters"]["refinement"]
+    refinement_lr_factor = configs["hyperparameters"]["refinement_lr_factor"]
+    
     # Load data set
-    dataset = MagnaSet()
+    dataset = MagnaSet(configs)
     train, val, _ = dataset.random_split(random_state=42)
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val, batch_size=batch_size, shuffle=True)
 
     # Initialize model
-    tagger = MusicTagger(dataset.class_names)
+    tagger = MusicTagger(configs)
 
     # Training loop
-    print("Training ...")
-
+    print(f"Training on {tagger.device} ...")
     best_val_loss = float("inf")
     cur_patience = patience
     cur_refinement = refinement
     cur_learning_rate = learning_rate
-
     for epoch in range(num_epochs):
+        print(f"--- Epoch {epoch+1}/{num_epochs} ---")
         train_loss = tagger.train(train_loader, cur_learning_rate)
         val_loss = tagger.evaluate(val_loader)
-        print(f"{epoch+1}/{num_epochs}: {train_loss=:.4f}, {val_loss=:.4f}")
+        print(f"Average loss: train={train_loss:.4f}, val={val_loss:.4f}")
         
         # Early stopping with refinement
         if val_loss < best_val_loss:
@@ -59,7 +57,7 @@ if __name__ == "__main__":
                     cur_learning_rate = cur_learning_rate * refinement_lr_factor                
                     cur_patience = patience
                     cur_refinement -= 1
-                    print(f"Refinement with new learning rate {cur_learning_rate}.")
+                    print(f"Refinement with new learning rate {cur_learning_rate:.6f}.")
                 else:
                     print("Stopped early!")
                     break
